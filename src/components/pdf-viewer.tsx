@@ -1,35 +1,62 @@
 import React, { useEffect, useRef } from "react";
-import { getDocument, TextContent } from "pdfjs-dist";
+import { getDocument, PDFJS } from "pdfjs-dist";
+import { } from "pdfjs-dist"
 
 interface Props {
   src: string
 }
 
+PDFJS.disableTextLayer = true;
+PDFJS.disableWorker = true;
+
+type TokenText = {
+  str: string;
+};
+type PageText = {
+  items: TokenText[];
+};
+type PdfPage = {
+  getTextContent: () => Promise<PageText>;
+};
+type Pdf = {
+  numPages: number;
+  getPage: (pageNo: number) => Promise<PdfPage>;
+};
+
+type PDFSource = Buffer | string;
+
 function PDFViewer(props: Props) {
 
   const canvasRef = useRef(null);
 
+  const getPageText = async (pdf: Pdf, pageNo: number) => {
+    const page = await pdf.getPage(pageNo);
+    const tokenizedText = await page.getTextContent();
+    const pageText = tokenizedText.items.map(token => token.str).join("");
+    return pageText;
+  };
+
+
+  const renderPage = async (canvas: any, canvasContext: any) {
+    const doc: any = await getDocument(props.src);
+    const page = await doc.getPage(1);
+    const scale = canvas.width / page.getViewport(1).width;
+
+    const viewport = page.getViewport({ scale });
+    canvas.height = viewport.height;
+
+    await page.render({
+      canvasContext,
+      viewport,
+    });
+  }
+
   useEffect(() => {
-
-    async function renderPage(canvas: any, canvasContext: any) {
-      const doc: any = await getDocument(props.src);
-      const page = await doc.getPage(1);
-      const scale = canvas.width / page.getViewport(1).width;
-
-      const viewport = page.getViewport({ scale });
-      canvas.height = viewport.height;
-
-      await page.render({
-        canvasContext,
-        viewport,
-      }).then(function(){
-        return page.getTextContent();
-      });
-    }
 
     const canvas = canvasRef.current;
     // @ts-ignore
     const canvasContext = canvas.getContext('2d');
+
 
     renderPage(canvas, canvasContext);
 
