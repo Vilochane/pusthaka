@@ -8,3 +8,19 @@ declare module "@atlaskit/reduced-ui-pack";
 declare module "@atlaskit/global-navigation";
 declare module "@atlaskit/page";
 declare module "pdfjs-dist/build/pdf";
+
+declare module "viewer" {
+
+
+  interface TextLayer {
+    textLayerDiv: HTMLDivElement,
+    pageIndex: number,
+    viewport: any
+
+  }
+
+  function TextLayerBuilder(_ref: TextLayer): any;
+
+  export = TextLayerBuilder;
+  
+}
